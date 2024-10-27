@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Docker-build-front') {
             steps {
-                sh 'docker build -t front /var/lib/jenkins/workspace/was-clone/FrontEnd/my-app/Dockerfile'
+                sh 'docker build -t front /var/lib/jenkins/workspace/was-clone/FrontEnd/my-app/'
             }
         }
         stage('docker run') {
