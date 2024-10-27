@@ -1,19 +1,19 @@
 pipeline {
     agent any
     stages {
-        stage('Hello') {
+        stage('Front copy') {
             steps {
-                echo 'Hello World 2'
+                sh 'cp /var/lib/jenkins/workspace/was-clone/Dockerfile-front /var/lib/jenkins/workspace/was-clone/FrontEnd/my-app/Dockerfile'
             }
         }
-        stage('Shell1') {
+        stage('Docker-build-front') {
             steps {
-                sh 'ls /etc/netplan'
+                sh 'docker build -t front /var/lib/jenkins/workspace/was-clone/FrontEnd/my-app/Dockerfile'
             }
         }
-        stage('Shell2') {
+        stage('docker run') {
             steps {
-                sh 'ls /home/'
+                sh 'docker run -d -p 80:80 front'
             }
         }
     }
