@@ -13,7 +13,7 @@ pipeline {
         }
         stage('docker run') {
             steps {
-                sh 'docker run -d -p 81:80 front'
+                sh 'sudo docker run -d -p 81:80 front'
             }
         }
     }
