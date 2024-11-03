@@ -3,12 +3,12 @@ pipeline {
     stages {
         stage('Front copy') {
             steps {
-                sh 'cp /var/lib/jenkins/workspace/was-clone/Dockerfile-front /var/lib/jenkins/workspace/was-clone/FrontEnd/my-app/Dockerfile'
+                sh 'cp /var/lib/jenkins/workspace/site/Dockerfile-front /var/lib/jenkins/workspace/site/FrontEnd/my-app/Dockerfile'
             }
         }
         stage('Docker-build-front') {
             steps {
-                sh 'sudo docker build -t front /var/lib/jenkins/workspace/was-clone/FrontEnd/my-app/'
+                sh 'sudo docker build -t front /var/lib/jenkins/workspace/site/FrontEnd/my-app/'
             }
         }
         stage('docker run') {
@@ -18,3 +18,6 @@ pipeline {
         }
     }
 }
+
+
+// /var/lib/jenkins/workspace/site
