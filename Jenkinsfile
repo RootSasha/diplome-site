@@ -15,6 +15,7 @@ pipeline {
             steps {
                 sh 'sudo docker run -d -p 81:80 front'
             }
+        }
         stage('Bek copy') {
             steps {
                 sh 'cp /var/lib/jenkins/workspace/site/Dockerfile-bek /var/lib/jenkins/workspace/site/BackEnd/Amazon-clone/Dockerfile'
