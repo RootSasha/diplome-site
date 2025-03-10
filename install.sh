@@ -69,7 +69,7 @@ cat /var/lib/jenkins/secrets/initialAdminPassword
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-sudo ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519 -C "shupik3@gmail.com"
+sudo ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519 -C "sashamankovsky2019@gmail.com"
 cat /root/.ssh/id_ed25519.pub
 cat /root/.ssh/id_ed25519
 
