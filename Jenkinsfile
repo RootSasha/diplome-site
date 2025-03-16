@@ -36,5 +36,24 @@ pipeline {
                 sh 'sudo docker run -d -p 81:80 front'
             }
     }
+        stage('Push to Docker Hub') {
+    when {
+        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+    }
+    steps {
+        script {
+            withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+                sh '''
+                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                docker tag bek your-dockerhub-username/bek:latest
+                docker tag front your-dockerhub-username/front:latest
+                docker push your-dockerhub-username/bek:latest
+                docker push your-dockerhub-username/front:latest
+                '''
+            }
+        }
+    }
+}
+
 }
 }
