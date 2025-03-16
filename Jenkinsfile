@@ -42,18 +42,17 @@ pipeline {
     }
     steps {
         script {
-            withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+            withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKERHUB_TOKEN')]) {
                 sh '''
-                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                docker tag bek your-dockerhub-username/bek:latest
-                docker tag front your-dockerhub-username/front:latest
-                docker push your-dockerhub-username/bek:latest
-                docker push your-dockerhub-username/front:latest
+                echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                docker tag bek sasha22mk/bek:latest
+                docker tag front sasha22mk/front:latest
+                docker push sasha22mk/bek:latest
+                docker push sasha22mk/front:latest
                 '''
             }
         }
     }
 }
-
 }
 }
