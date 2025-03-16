@@ -42,7 +42,7 @@ pipeline {
     }
     steps {
         script {
-            withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKERHUB_TOKEN')]) {
+            withCredentials([string(credentialsId: 'dockerhub-credentials', variable: 'DOCKERHUB_TOKEN')]) {
                 sh '''
                 echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
                 docker tag bek sasha22mk/bek:latest
