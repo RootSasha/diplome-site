@@ -1,9 +1,24 @@
 pipeline {
     agent any
+
+    environment {
+        DOCKER_HUB_USER = 'your_dockerhub_username'
+        DOCKER_HUB_REPO_BEK = 'your_dockerhub_username/bek'
+        DOCKER_HUB_REPO_FRONT = 'your_dockerhub_username/front'
+        DOCKER_HUB_REPO_DB = 'your_dockerhub_username/sqlserver'
+    }
+
     stages {
-        stage('SQL') {
+        stage('Run SQL Server') {
             steps {
                 sh 'docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Qwerty-1" -p 1433:1433 --name sql111 --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest'
+            }
+        }
+        stage('Commit and Tag SQL Image') {
+            steps {
+                sh '''
+                    docker commit sql111 ${DOCKER_HUB_REPO_DB}:latest
+                '''
             }
         }
         stage('Bek copy') {
@@ -35,24 +50,37 @@ pipeline {
             steps {
                 sh 'sudo docker run -d -p 81:80 front'
             }
-    }
-        stage('Push to Docker Hub') {
-    when {
-        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-    }
-    steps {
-        script {
-            withCredentials([string(credentialsId: 'dockerhub-credentials', variable: 'DOCKERHUB_TOKEN')]) {
+        }
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                }
+            }
+        }
+        stage('Tag and Push bek to Docker Hub') {
+            steps {
                 sh '''
-                echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                docker tag bek sasha22mk/bek:latest
-                docker tag front sasha22mk/front:latest
-                docker push sasha22mk/bek:latest
-                docker push sasha22mk/front:latest
+                    docker tag bek ${DOCKER_HUB_REPO_BEK}:latest
+                    docker push ${DOCKER_HUB_REPO_BEK}:latest
+                '''
+            }
+        }
+        stage('Tag and Push front to Docker Hub') {
+            steps {
+                sh '''
+                    docker tag front ${DOCKER_HUB_REPO_FRONT}:latest
+                    docker push ${DOCKER_HUB_REPO_FRONT}:latest
+                '''
+            }
+        }
+        stage('Push SQL Image to Docker Hub') {
+            steps {
+                sh '''
+                    docker push ${DOCKER_HUB_REPO_DB}:latest
                 '''
             }
         }
     }
 }
-}
-}
+
