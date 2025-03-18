@@ -2,11 +2,23 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER = 'sasha22mk'
+        DOCKER_HUB_USER = "${env.DOCKERHUB_USER}"
         DOCKER_HUB_REPO = 'sasha22mk/test-site'
+        DOCKERHUB_PASSWORD = "${env.DOCKERHUB_PASSWORD}"
     }
 
     stages {
+        stage('Check Credentials') {
+            steps {
+                script {
+                    if (!env.DOCKERHUB_USER || !env.DOCKERHUB_PASSWORD) {
+                        error('Docker Hub credentials not found!')
+                    } else {
+                        echo 'Docker Hub credentials found.'
+                    }
+                }
+            }
+        }
         stage('Run SQL Server') {
             steps {
                 sh 'docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Qwerty-1" -p 1433:1433 --name sql111 --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest'
@@ -51,9 +63,7 @@ pipeline {
         }
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh 'echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin'
-                }
+                sh "echo \"$DOCKERHUB_PASSWORD\" | docker login -u \"$DOCKER_HUB_USER\" --password-stdin"
             }
         }
         stage('Push SQL Image to Docker Hub') {
