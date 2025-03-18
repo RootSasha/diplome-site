@@ -6,18 +6,6 @@ pipeline {
     }
 
     stages {
-        stage('Check Credentials') {
-            steps {
-                script {
-                    def credentials = jenkins.model.Jenkins.instance.getItemByFullName('monitoring-site').getCredentials('docker-hub-credentials')
-                    if (!credentials) {
-                        error('Docker Hub credentials not found!')
-                    } else {
-                        echo 'Docker Hub credentials found.'
-                    }
-                }
-            }
-        }
         stage('Run SQL Server') {
             steps {
                 sh 'docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Qwerty-1" -p 1433:1433 --name sql111 --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest'
@@ -60,38 +48,25 @@ pipeline {
                 sh 'sudo docker run -d -p 81:80 ${DOCKER_HUB_REPO}:front'
             }
         }
-        stage('Login to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh "echo \"$DOCKERHUB_PASSWORD\" | docker login -u \"$DOCKERHUB_USER\" --password-stdin"
-                }
-            }
-        }
         stage('Push SQL Image to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh '''
-                        docker push ${DOCKER_HUB_REPO}:2022-latest
-                    '''
-                }
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:2022-latest
+                '''
             }
         }
         stage('Push bek to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh '''
-                        docker push ${DOCKER_HUB_REPO}:bek
-                    '''
-                }
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:bek
+                '''
             }
         }
         stage('Push front to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh '''
-                        docker push ${DOCKER_HUB_REPO}:front
-                    '''
-                }
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:front
+                '''
             }
         }
     }
