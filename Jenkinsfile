@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Create Docker Network') {
             steps {
-                sh 'docker network create my-app-network'
+                sh 'docker network create baza'
             }
         }
         stage('Run SQL Server') {
