@@ -1,4 +1,4 @@
-pipeline { 
+pipeline {
     agent any
 
     environment {
@@ -7,6 +7,7 @@ pipeline {
         CONTAINER_NAME_BEK = 'bek'
         CONTAINER_NAME_FRONT = 'front'
         BEK_PORT = '5034'
+        FRONT_PORT = '81'
     }
 
     stages {
@@ -15,6 +16,7 @@ pipeline {
                 sh 'docker network create baza || true' // Пропустити помилку, якщо мережа вже існує
             }
         }
+
         stage('Run SQL Server') {
             steps {
                 script {
@@ -24,6 +26,7 @@ pipeline {
                 }
             }
         }
+
         stage('Commit and Tag SQL Image') {
             steps {
                 sh '''
@@ -31,44 +34,59 @@ pipeline {
                 '''
             }
         }
+
         stage('Bek copy') {
             steps {
                 sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/Dockerfile'
             }
         }
+
         stage('Docker-build-bek') {
             steps {
                 sh 'sudo docker build -t ${DOCKER_HUB_REPO}:bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/'
             }
         }
+
         stage('Run bek container') {
             steps {
                 script {
-                    // Перевірка чи порт зайнятий
-                    sh "docker ps -a --filter name=${CONTAINER_NAME_BEK} --filter publish=${BEK_PORT} --format '{{.Names}}' | grep -q ${CONTAINER_NAME_BEK} && docker rm -f ${CONTAINER_NAME_BEK} || true"
-                    sh "docker run -d -p ${BEK_PORT}:5034 --name bek ${DOCKER_HUB_REPO}:bek"
+                    // Перевірка чи порт 5034 зайнятий і видалення контейнера, якщо так
+                    sh """
+                    if docker ps -a --filter 'publish=${BEK_PORT}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_BEK}; then
+                        docker rm -f ${CONTAINER_NAME_BEK}
+                    fi
+                    docker run -d -p ${BEK_PORT}:5034 --name bek ${DOCKER_HUB_REPO}:bek
+                    """
                 }
             }
         }
+
         stage('Front copy') {
             steps {
                 sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/Dockerfile'
             }
         }
+
         stage('Docker-build-front') {
             steps {
                 sh 'sudo docker build -t ${DOCKER_HUB_REPO}:front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/'
             }
         }
+
         stage('Run front container') {
             steps {
                 script {
-                    // Перевірка чи існує контейнер для front
-                    sh "docker ps -a --filter name=${CONTAINER_NAME_FRONT} --format '{{.Names}}' | grep -q ${CONTAINER_NAME_FRONT} && docker rm -f ${CONTAINER_NAME_FRONT} || true"
-                    sh 'sudo docker run -d -p 81:80 --name front ${DOCKER_HUB_REPO}:front'
+                    // Перевірка чи порт 81 зайнятий і видалення контейнера, якщо так
+                    sh """
+                    if docker ps -a --filter 'publish=${FRONT_PORT}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_FRONT}; then
+                        docker rm -f ${CONTAINER_NAME_FRONT}
+                    fi
+                    sudo docker run -d -p ${FRONT_PORT}:80 --name front ${DOCKER_HUB_REPO}:front
+                    """
                 }
             }
         }
+
         stage('Push SQL Image to Docker Hub') {
             steps {
                 sh '''
@@ -76,6 +94,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Push bek to Docker Hub') {
             steps {
                 sh '''
@@ -83,6 +102,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Push front to Docker Hub') {
             steps {
                 sh '''
