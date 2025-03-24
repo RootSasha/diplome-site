@@ -50,7 +50,7 @@ pipeline {
                     sh '''
                         docker ps -a --filter name=${BEK_CONTAINER_NAME} --format {{.Names}} | grep -q ${BEK_CONTAINER_NAME} && docker rm -f ${BEK_CONTAINER_NAME} || true
                         if docker ps --filter "publish=5034" --format {{.Names}} | grep -q bek; then
-                            echo "Port 5034 is already in use, removing the existing container..."
+                            echo "Container using port 5034 found, removing..."
                             docker rm -f bek
                         fi
                         docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} sasha22mk/test-site:bek
@@ -75,7 +75,7 @@ pipeline {
                     sh '''
                         docker ps -a --filter name=${FRONT_CONTAINER_NAME} --format {{.Names}} | grep -q ${FRONT_CONTAINER_NAME} && docker rm -f ${FRONT_CONTAINER_NAME} || true
                         if docker ps --filter "publish=81" --format {{.Names}} | grep -q front; then
-                            echo "Port 81 is already in use, removing the existing container..."
+                            echo "Container using port 81 found, removing..."
                             docker rm -f front
                         fi
                         docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} sasha22mk/test-site:front
