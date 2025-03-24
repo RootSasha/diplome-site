@@ -54,7 +54,10 @@ pipeline {
         }
         stage('docker run bek') {
             steps {
-                sh "docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} ${DOCKER_HUB_REPO}:bek"
+                sh '''
+                    sleep 15
+                    docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} ${DOCKER_HUB_REPO}:bek
+                '''
             }
         }
         stage('Front copy') {
