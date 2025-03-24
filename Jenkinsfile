@@ -14,10 +14,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Отримання ID контейнерів
-                        SQL111_ID=$(sudo docker ps -aqf "name=${SQL_CONTAINER_NAME}")
-                        BEK_ID=$(sudo docker ps -aqf "name=${BEK_CONTAINER_NAME}")
-                        FRONT_ID=$(sudo docker ps -aqf "name=${FRONT_CONTAINER_NAME}")
+                        # Отримання ID запущених контейнерів
+                        SQL111_ID=$(sudo docker ps -aqf "name=${SQL_CONTAINER_NAME} status=running")
+                        BEK_ID=$(sudo docker ps -aqf "name=${BEK_CONTAINER_NAME} status=running")
+                        FRONT_ID=$(sudo docker ps -aqf "name=${FRONT_CONTAINER_NAME} status=running")
 
                         # Видалення контейнерів за ID
                         if [ -n "$SQL111_ID" ]; then
@@ -98,7 +98,7 @@ pipeline {
 
         stage('docker run front') {
             steps {
-                sh "sudo docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:front"
+                sh "sudo docker run -d -p 82:80 --name ${FRONT_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:front"
             }
         }
 
