@@ -104,19 +104,23 @@ pipeline {
 
         stage('Push SQL Image to Docker Hub') {
             steps {
-                sh "sudo docker push ${DOCKER_HUB_REPO}:2022-latest"
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:2022-latest
+                '''
             }
         }
-
         stage('Push bek to Docker Hub') {
             steps {
-                sh "sudo docker push ${DOCKER_HUB_REPO}:bek"
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:bek
+                '''
             }
         }
-
         stage('Push front to Docker Hub') {
             steps {
-                sh "sudo docker push ${DOCKER_HUB_REPO}:front"
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:front
+                '''
             }
         }
     }
