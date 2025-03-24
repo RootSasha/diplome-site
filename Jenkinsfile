@@ -6,6 +6,7 @@ pipeline {
         CONTAINER_NAME_SQL = 'sql111'
         CONTAINER_NAME_BEK = 'bek-container'
         CONTAINER_NAME_FRONT = 'front-container'
+        BEK_PORT = '5034'
     }
 
     stages {
@@ -43,9 +44,9 @@ pipeline {
         stage('Run bek container') {
             steps {
                 script {
-                    // Перевірка чи існує контейнер для bek, і якщо так, то його видалення
-                    sh "docker ps -a --filter 'name=${CONTAINER_NAME_BEK}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_BEK} && docker rm -f ${CONTAINER_NAME_BEK} || true"
-                    sh 'sudo docker run -d -p 5034:5034 --name bek-container ${DOCKER_HUB_REPO}:bek'
+                    // Перевірка чи порт зайнятий
+                    sh "docker ps -a --filter name=${CONTAINER_NAME_BEK} --filter publish=${BEK_PORT} --format '{{.Names}}' | grep -q ${CONTAINER_NAME_BEK} && docker rm -f ${CONTAINER_NAME_BEK} || true"
+                    sh "docker run -d -p ${BEK_PORT}:5034 --name bek-container ${DOCKER_HUB_REPO}:bek"
                 }
             }
         }
@@ -62,8 +63,8 @@ pipeline {
         stage('Run front container') {
             steps {
                 script {
-                    // Перевірка чи існує контейнер для front, і якщо так, то його видалення
-                    sh "docker ps -a --filter 'name=${CONTAINER_NAME_FRONT}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_FRONT} && docker rm -f ${CONTAINER_NAME_FRONT} || true"
+                    // Перевірка чи існує контейнер для front
+                    sh "docker ps -a --filter name=${CONTAINER_NAME_FRONT} --format '{{.Names}}' | grep -q ${CONTAINER_NAME_FRONT} && docker rm -f ${CONTAINER_NAME_FRONT} || true"
                     sh 'sudo docker run -d -p 81:80 --name front-container ${DOCKER_HUB_REPO}:front'
                 }
             }
