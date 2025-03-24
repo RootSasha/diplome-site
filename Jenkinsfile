@@ -1,15 +1,17 @@
 pipeline {
     agent any
+
     environment {
-        // Задаємо змінні для імен контейнерів
+        DOCKER_HUB_REPO = 'sasha22mk/test-site'
         SQL_CONTAINER_NAME = 'sql111'
         BEK_CONTAINER_NAME = 'bek'
         FRONT_CONTAINER_NAME = 'front'
     }
+
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout scm // Отримуємо код з репозиторію
             }
         }
         stage('Cleanup Containers') {
@@ -25,22 +27,19 @@ pipeline {
         }
         stage('Create Docker Network') {
             steps {
-                sh 'docker network create baza || true'
+                sh 'docker network create baza || true' // Створюємо мережу, якщо її немає
             }
         }
         stage('Run SQL Server') {
             steps {
-                script {
-                    // Перевірка чи контейнер існує і видалення при необхідності
-                    sh '''
-                        docker run -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Qwerty-1 -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest
-                    '''
-                }
+                sh 'docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Qwerty-1" -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest'
             }
         }
         stage('Commit and Tag SQL Image') {
             steps {
-                sh 'docker commit sql111 sasha22mk/test-site:2022-latest'
+                sh '''
+                    docker commit ${SQL_CONTAINER_NAME} ${DOCKER_HUB_REPO}:2022-latest
+                '''
             }
         }
         stage('Bek copy') {
@@ -50,52 +49,48 @@ pipeline {
         }
         stage('Docker-build-bek') {
             steps {
-                sh 'sudo docker build -t sasha22mk/test-site:bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/'
+                sh "docker build -t ${DOCKER_HUB_REPO}:bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/"
             }
         }
-        stage('Run bek container') {
+        stage('docker run bek') {
             steps {
-                script {
-                    // Перевірка чи порт вже використовується і видалення контейнера, якщо це так
-                    sh '''
-                        docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} sasha22mk/test-site:bek
-                    '''
-                }
+                sh "docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} ${DOCKER_HUB_REPO}:bek"
             }
         }
         stage('Front copy') {
             steps {
-                sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/Amazon-clone/Dockerfile'
+                sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/Dockerfile'
             }
         }
         stage('Docker-build-front') {
             steps {
-                sh 'docker build -t sasha22mk/test-site:front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/Amazon-clone/'
+                sh "docker build -t ${DOCKER_HUB_REPO}:front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/"
             }
         }
-        stage('Run front container') {
+        stage('docker run front') {
             steps {
-                script {
-                    // Перевірка чи порт вже використовується і видалення контейнера, якщо це так
-                    sh '''
-                        docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} sasha22mk/test-site:front
-                    '''
-                }
+                sh "docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} ${DOCKER_HUB_REPO}:front"
             }
         }
         stage('Push SQL Image to Docker Hub') {
             steps {
-                sh 'docker push sasha22mk/test-site:2022-latest'
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:2022-latest
+                '''
             }
         }
         stage('Push bek to Docker Hub') {
             steps {
-                sh 'docker push sasha22mk/test-site:bek'
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:bek
+                '''
             }
         }
         stage('Push front to Docker Hub') {
             steps {
-                sh 'docker push sasha22mk/test-site:front'
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:front
+                '''
             }
         }
     }
