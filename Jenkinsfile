@@ -47,7 +47,7 @@ pipeline {
 
         stage('Create Docker Network') {
             steps {
-                sh "sudo docker network create ${DOCKER_NETWORK_NAME}"
+                sh 'sudo docker network create baza || true'
             }
         }
 
@@ -78,6 +78,7 @@ pipeline {
         stage('docker run bek') {
             steps {
                 sh '''
+                    sleep 15
                     sudo docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:bek
                 '''
             }
