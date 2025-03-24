@@ -49,10 +49,7 @@ pipeline {
                     // Перевірка чи порт вже використовується і видалення контейнера, якщо це так
                     sh '''
                         docker ps -a --filter name=${BEK_CONTAINER_NAME} --format {{.Names}} | grep -q ${BEK_CONTAINER_NAME} && docker rm -f ${BEK_CONTAINER_NAME} || true
-                        if docker ps --filter "publish=5034" --format {{.Names}} | grep -q bek; then
-                            echo "Container using port 5034 found, removing..."
-                            docker rm -f bek
-                        fi
+                        docker rm -f bek
                         docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} sasha22mk/test-site:bek
                     '''
                 }
