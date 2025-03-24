@@ -46,8 +46,13 @@ pipeline {
         stage('Run bek container') {
             steps {
                 script {
+                    // Перевірка чи порт вже використовується і видалення контейнера, якщо це так
                     sh '''
                         docker ps -a --filter name=${BEK_CONTAINER_NAME} --format {{.Names}} | grep -q ${BEK_CONTAINER_NAME} && docker rm -f ${BEK_CONTAINER_NAME} || true
+                        if docker ps --filter "publish=5034" --format {{.Names}} | grep -q bek; then
+                            echo "Port 5034 is already in use, removing the existing container..."
+                            docker rm -f bek
+                        fi
                         docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} sasha22mk/test-site:bek
                     '''
                 }
@@ -66,9 +71,14 @@ pipeline {
         stage('Run front container') {
             steps {
                 script {
+                    // Перевірка чи порт вже використовується і видалення контейнера, якщо це так
                     sh '''
                         docker ps -a --filter name=${FRONT_CONTAINER_NAME} --format {{.Names}} | grep -q ${FRONT_CONTAINER_NAME} && docker rm -f ${FRONT_CONTAINER_NAME} || true
-                        docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} sasha22mk/test-site:front
+                        if docker ps --filter "publish=80" --format {{.Names}} | grep -q front; then
+                            echo "Port 80 is already in use, removing the existing container..."
+                            docker rm -f front
+                        fi
+                        docker run -d -p 80:80 --name ${FRONT_CONTAINER_NAME} sasha22mk/test-site:front
                     '''
                 }
             }
