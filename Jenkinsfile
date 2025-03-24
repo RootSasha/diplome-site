@@ -1,113 +1,91 @@
 pipeline {
     agent any
-
     environment {
-        DOCKER_HUB_REPO = 'sasha22mk/test-site'
-        CONTAINER_NAME_SQL = 'sql111'
-        CONTAINER_NAME_BEK = 'bek'
-        CONTAINER_NAME_FRONT = 'front'
-        BEK_PORT = '5034'
-        FRONT_PORT = '81'
+        // Задаємо змінні для імен контейнерів
+        SQL_CONTAINER_NAME = 'sql111'
+        BEK_CONTAINER_NAME = 'bek'
+        FRONT_CONTAINER_NAME = 'front'
     }
-
     stages {
-        stage('Create Docker Network') {
+        stage('Checkout') {
             steps {
-                sh 'docker network create baza || true' // Пропустити помилку, якщо мережа вже існує
+                checkout scm
             }
         }
-
+        stage('Create Docker Network') {
+            steps {
+                sh 'docker network create baza || true'
+            }
+        }
         stage('Run SQL Server') {
             steps {
                 script {
-                    // Перевірка чи існує контейнер, і якщо так, то його видалення
-                    sh "docker ps -a --filter 'name=${CONTAINER_NAME_SQL}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_SQL} && docker rm -f ${CONTAINER_NAME_SQL} || true"
-                    sh 'docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Qwerty-1" -p 1433:1433 --name sql111 --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest'
+                    // Перевірка чи контейнер існує і видалення при необхідності
+                    sh '''
+                        docker ps -a --filter name=${SQL_CONTAINER_NAME} --format {{.Names}} | grep -q ${SQL_CONTAINER_NAME} && docker rm -f ${SQL_CONTAINER_NAME} || true
+                        docker run -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Qwerty-1 -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest
+                    '''
                 }
             }
         }
-
         stage('Commit and Tag SQL Image') {
             steps {
-                sh '''
-                    docker commit sql111 ${DOCKER_HUB_REPO}:2022-latest
-                '''
+                sh 'docker commit sql111 sasha22mk/test-site:2022-latest'
             }
         }
-
         stage('Bek copy') {
             steps {
                 sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/Dockerfile'
             }
         }
-
         stage('Docker-build-bek') {
             steps {
-                sh 'sudo docker build -t ${DOCKER_HUB_REPO}:bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/'
+                sh 'sudo docker build -t sasha22mk/test-site:bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/'
             }
         }
-
         stage('Run bek container') {
             steps {
                 script {
-                    // Перевірка чи порт 5034 зайнятий і видалення контейнера, якщо так
-                    sh """
-                    if docker ps -a --filter 'publish=${BEK_PORT}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_BEK}; then
-                        docker rm -f ${CONTAINER_NAME_BEK}
-                    fi
-                    docker run -d -p ${BEK_PORT}:5034 --name bek ${DOCKER_HUB_REPO}:bek
-                    """
+                    sh '''
+                        docker ps -a --filter name=${BEK_CONTAINER_NAME} --format {{.Names}} | grep -q ${BEK_CONTAINER_NAME} && docker rm -f ${BEK_CONTAINER_NAME} || true
+                        docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} sasha22mk/test-site:bek
+                    '''
                 }
             }
         }
-
         stage('Front copy') {
             steps {
-                sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/Dockerfile'
+                sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/Amazon-clone/Dockerfile'
             }
         }
-
         stage('Docker-build-front') {
             steps {
-                sh 'sudo docker build -t ${DOCKER_HUB_REPO}:front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/'
+                sh 'docker build -t sasha22mk/test-site:front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/Amazon-clone/'
             }
         }
-
         stage('Run front container') {
             steps {
                 script {
-                    // Перевірка чи порт 81 зайнятий і видалення контейнера, якщо так
-                    sh """
-                    if docker ps -a --filter 'publish=${FRONT_PORT}' --format '{{.Names}}' | grep -q ${CONTAINER_NAME_FRONT}; then
-                        docker rm -f ${CONTAINER_NAME_FRONT}
-                    fi
-                    sudo docker run -d -p ${FRONT_PORT}:80 --name front ${DOCKER_HUB_REPO}:front
-                    """
+                    sh '''
+                        docker ps -a --filter name=${FRONT_CONTAINER_NAME} --format {{.Names}} | grep -q ${FRONT_CONTAINER_NAME} && docker rm -f ${FRONT_CONTAINER_NAME} || true
+                        docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} sasha22mk/test-site:front
+                    '''
                 }
             }
         }
-
         stage('Push SQL Image to Docker Hub') {
             steps {
-                sh '''
-                    docker push ${DOCKER_HUB_REPO}:2022-latest
-                '''
+                sh 'docker push sasha22mk/test-site:2022-latest'
             }
         }
-
         stage('Push bek to Docker Hub') {
             steps {
-                sh '''
-                    docker push ${DOCKER_HUB_REPO}:bek
-                '''
+                sh 'docker push sasha22mk/test-site:bek'
             }
         }
-
         stage('Push front to Docker Hub') {
             steps {
-                sh '''
-                    docker push ${DOCKER_HUB_REPO}:front
-                '''
+                sh 'docker push sasha22mk/test-site:front'
             }
         }
     }
