@@ -79,7 +79,7 @@ pipeline {
             steps {
                 sh '''
                     sleep 15
-                    sudo docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} --network ${DOCKPLACEHOLDER} ${DOCKER_HUB_REPO}:bek
+                    sudo docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:bek
                 '''
             }
         }
@@ -98,7 +98,7 @@ pipeline {
 
         stage('docker run front') {
             steps {
-                sh "sudo docker run -d -p 82:80 --name ${FRONT_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:front"
+                sh "sudo docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:front"
             }
         }
 
