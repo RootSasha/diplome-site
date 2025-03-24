@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOCKER_HUB_REPO = 'sasha22mk/test-site'
         CONTAINER_NAME_SQL = 'sql111'
-        CONTAINER_NAME_BEK = 'bek-container'
-        CONTAINER_NAME_FRONT = 'front-container'
+        CONTAINER_NAME_BEK = 'bek'
+        CONTAINER_NAME_FRONT = 'front'
         BEK_PORT = '5034'
     }
 
