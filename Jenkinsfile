@@ -18,9 +18,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        docker ps -a --filter name=${SQL_CONTAINER_NAME} --format {{.Names}} | grep -q ${SQL_CONTAINER_NAME} && docker rm -f ${SQL_CONTAINER_NAME} || true
-                        docker ps -a --filter name=${BEK_CONTAINER_NAME} --format {{.Names}} | grep -q ${BEK_CONTAINER_NAME} && docker rm -f ${BEK_CONTAINER_NAME} || true
-                        docker ps -a --filter name=${FRONT_CONTAINER_NAME} --format {{.Names}} | grep -q ${FRONT_CONTAINER_NAME} && docker rm -f ${FRONT_CONTAINER_NAME} || true
+                        sudo docker rm -f sql111 || true
+                        sudo docker rm -f bek || true
+                        sudo docker rm -f front || true
                     '''
                 }
             }
