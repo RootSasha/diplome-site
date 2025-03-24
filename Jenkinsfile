@@ -46,7 +46,7 @@ pipeline {
                 script {
                     // Перевірка чи порт зайнятий
                     sh "docker ps -a --filter name=${CONTAINER_NAME_BEK} --filter publish=${BEK_PORT} --format '{{.Names}}' | grep -q ${CONTAINER_NAME_BEK} && docker rm -f ${CONTAINER_NAME_BEK} || true"
-                    sh "docker run -d -p ${BEK_PORT}:5034 --name bek-container ${DOCKER_HUB_REPO}:bek"
+                    sh "docker run -d -p ${BEK_PORT}:5034 --name bek ${DOCKER_HUB_REPO}:bek"
                 }
             }
         }
@@ -65,7 +65,7 @@ pipeline {
                 script {
                     // Перевірка чи існує контейнер для front
                     sh "docker ps -a --filter name=${CONTAINER_NAME_FRONT} --format '{{.Names}}' | grep -q ${CONTAINER_NAME_FRONT} && docker rm -f ${CONTAINER_NAME_FRONT} || true"
-                    sh 'sudo docker run -d -p 81:80 --name front-container ${DOCKER_HUB_REPO}:front'
+                    sh 'sudo docker run -d -p 81:80 --name front ${DOCKER_HUB_REPO}:front'
                 }
             }
         }
