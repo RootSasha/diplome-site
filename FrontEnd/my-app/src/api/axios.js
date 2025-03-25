@@ -1,4 +1,4 @@
 import axios from "axios";
 
 
-export const baseURL ='http://"$JENKINS_URL":5034';
+export const baseURL ='http://13.60.93.143:5034';
