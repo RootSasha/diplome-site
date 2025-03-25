@@ -123,11 +123,5 @@ pipeline {
                 '''
             }
         }
-        stage('Backup to S3') {
-            steps {
-                sh 'chmod +x S3B.sh'
-                sh './S3B.sh'
-            }
-        }
     }
 }
