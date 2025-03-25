@@ -65,13 +65,13 @@ pipeline {
 
         stage('Bek copy') {
             steps {
-                sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/Dockerfile'
+                sh 'cp /var/lib/jenkins/workspace/site/Dockerfile-bek /var/lib/jenkins/workspace/site/BackEnd/Amazon-clone/Dockerfile'
             }
         }
 
         stage('Docker-build-bek') {
             steps {
-                sh "sudo docker build -t ${DOCKER_HUB_REPO}:bek /var/lib/jenkins/workspace/monitoring-site/BackEnd/Amazon-clone/"
+                sh "sudo docker build -t ${DOCKER_HUB_REPO}:bek /var/lib/jenkins/workspace/site/BackEnd/Amazon-clone/"
             }
         }
 
@@ -86,13 +86,13 @@ pipeline {
 
         stage('Front copy') {
             steps {
-                sh 'cp /var/lib/jenkins/workspace/monitoring-site/Dockerfile-front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/Dockerfile'
+                sh 'cp /var/lib/jenkins/workspace/site/Dockerfile-front /var/lib/jenkins/workspace/site/FrontEnd/my-app/Dockerfile'
             }
         }
 
         stage('Docker-build-front') {
             steps {
-                sh "sudo docker build -t ${DOCKER_HUB_REPO}:front /var/lib/jenkins/workspace/monitoring-site/FrontEnd/my-app/"
+                sh "sudo docker build -t ${DOCKER_HUB_REPO}:front /var/lib/jenkins/workspace/site/FrontEnd/my-app/"
             }
         }
 
