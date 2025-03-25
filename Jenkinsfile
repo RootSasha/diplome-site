@@ -53,7 +53,7 @@ pipeline {
 
         stage('Run SQL Server') {
             steps {
-                sh "sudo docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=Qwerty-1' -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 --network ${DOCKER_NETWORK_NAME} -d mcr.microsoft.com/mssql/server:2022-latest"
+                sh "sudo docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=Qwerty-1' -u 0 -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 --network ${DOCKER_NETWORK_NAME} -d mcr.microsoft.com/mssql/server:2022-latest"
             }
         }
 
