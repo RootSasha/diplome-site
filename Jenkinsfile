@@ -2,19 +2,17 @@ pipeline {
     agent any
 
     environment {
-        EKS_CLUSTER_NAME = 'my-eks-cluster'
-        AWS_REGION = 'eu-north-1'
         KUBE_CONFIG = credentials('kubeconfig-eks') // Jenkins credentials для kubeconfig
+        DEPLOYMENT_FILE = 'deployment.yaml' // Назва вашого об'єднаного YAML файлу
     }
 
     stages {
-        stage('Deploy to EKS') {
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
                     sh '''#!/bin/bash
-                        aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME} --region ${AWS_REGION} --alias ${EKS_CLUSTER_NAME}
                         echo "$KUBE_CONFIG" > kubeconfig.yaml
-                        kubectl apply -f deployment.yaml --kubeconfig kubeconfig.yaml
+                        kubectl apply -f ${DEPLOYMENT_FILE} --kubeconfig kubeconfig.yaml
                     '''
                 }
             }
