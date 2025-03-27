@@ -11,10 +11,11 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 script {
-                    sh """
+                    sh '''#!/bin/bash
                         aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME} --region ${AWS_REGION} --alias ${EKS_CLUSTER_NAME}
-                        kubectl apply -f deployment.yaml --kubeconfig <(echo "$KUBE_CONFIG")
-                    """
+                        echo "$KUBE_CONFIG" > kubeconfig.yaml
+                        kubectl apply -f deployment.yaml --kubeconfig kubeconfig.yaml
+                    '''
                 }
             }
         }
