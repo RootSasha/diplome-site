@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            label 'role: jenkins-agent' // Використовуємо лейбл з pod template
+            inheritFrom 'jenkins-agent' // Замініть на ім'я вашого pod template
             yaml """
 apiVersion: v1
 kind: Pod
