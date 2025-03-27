@@ -1,20 +1,146 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            label 'role: jenkins-agent' // Використовуємо лейбл з pod template
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jnlp
+    image: jenkins/ssh-slave:alpine
+    args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+"""
+        }
+    }
 
     environment {
-        KUBE_CONFIG = credentials('kubeconfig-eks') // Jenkins credentials для kubeconfig
-        DEPLOYMENT_FILE = 'deployment.yaml' // Назва вашого об'єднаного YAML файлу
+        DOCKER_HUB_REPO = 'sasha22mk/test-site'
+        SQL_CONTAINER_NAME = 'sql111'
+        BEK_CONTAINER_NAME = 'bek'
+        FRONT_CONTAINER_NAME = 'front'
+        DOCKER_NETWORK_NAME = 'baza'
     }
 
     stages {
-        stage('Deploy to Kubernetes') {
+        stage('Cleanup Containers') {
             steps {
                 script {
-                    sh '''#!/bin/bash
-                        echo "$KUBE_CONFIG" > kubeconfig.yaml
-                        kubectl apply -f ${DEPLOYMENT_FILE} --kubeconfig kubeconfig.yaml
+                    sh '''
+                        # Отримання ID всіх існуючих контейнерів
+                        SQL111_ID=$(docker ps -aqf "name=${SQL_CONTAINER_NAME}")
+                        BEK_ID=$(docker ps -aqf "name=${BEK_CONTAINER_NAME}")
+                        FRONT_ID=$(docker ps -aqf "name=${FRONT_CONTAINER_NAME}")
+
+                        # Видалення контейнерів за ID
+                        if [ -n "$SQL111_ID" ]; then
+                            echo "Видаляємо контейнер ${SQL_CONTAINER_NAME} з ID: $SQL111_ID"
+                            docker rm -f $SQL111_ID
+                        else
+                            echo "Контейнер ${SQL_CONTAINER_NAME} не знайдено."
+                        fi
+
+                        if [ -n "$BEK_ID" ]; then
+                            echo "Видаляємо контейнер ${BEK_CONTAINER_NAME} з ID: $BEK_ID"
+                            docker rm -f $BEK_ID
+                        else
+                            echo "Контейнер ${BEK_CONTAINER_NAME} не знайдено."
+                        fi
+
+                        if [ -n "$FRONT_ID" ]; then
+                            echo "Видаляємо контейнер ${FRONT_CONTAINER_NAME} з ID: $FRONT_ID"
+                            docker rm -f $FRONT_ID
+                        else
+                            echo "Контейнер ${FRONT_CONTAINER_NAME} не знайдено."
+                        fi
                     '''
                 }
+            }
+        }
+
+        stage('Create Docker Network') {
+            steps {
+                sh 'docker network create baza || true'
+            }
+        }
+
+        stage('Run SQL Server') {
+            steps {
+                sh "docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=Qwerty-1' -u 0 -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 --network ${DOCKER_NETWORK_NAME} -d mcr.microsoft.com/mssql/server:2022-latest"
+            }
+        }
+
+        stage('Commit and Tag SQL Image') {
+            steps {
+                sh "docker commit ${SQL_CONTAINER_NAME} ${DOCKER_HUB_REPO}:2022-latest"
+            }
+        }
+
+        stage('Bek copy') {
+            steps {
+                sh 'cp /var/lib/jenkins/workspace/site/Dockerfile-bek /var/lib/jenkins/workspace/site/BackEnd/Amazon-clone/Dockerfile'
+            }
+        }
+
+        stage('Docker-build-bek') {
+            steps {
+                sh "docker build -t ${DOCKER_HUB_REPO}:bek /var/lib/jenkins/workspace/site/BackEnd/Amazon-clone/"
+            }
+        }
+
+        stage('docker run bek') {
+            steps {
+                sh '''
+                    sleep 15
+                    docker run -d -p 5034:5034 --name ${BEK_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:bek
+                '''
+            }
+        }
+
+        stage('Front copy') {
+            steps {
+                sh 'cp /var/lib/jenkins/workspace/site/Dockerfile-front /var/lib/jenkins/workspace/site/FrontEnd/my-app/Dockerfile'
+            }
+        }
+
+        stage('Docker-build-front') {
+            steps {
+                sh "docker build -t ${DOCKER_HUB_REPO}:front /var/lib/jenkins/workspace/site/FrontEnd/my-app/"
+            }
+        }
+
+        stage('docker run front') {
+            steps {
+                sh "docker run -d -p 81:80 --name ${FRONT_CONTAINER_NAME} --network ${DOCKER_NETWORK_NAME} ${DOCKER_HUB_REPO}:front"
+            }
+        }
+
+        stage('Push SQL Image to Docker Hub') {
+            steps {
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:2022-latest
+                '''
+            }
+        }
+        stage('Push bek to Docker Hub') {
+            steps {
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:bek
+                '''
+            }
+        }
+        stage('Push front to Docker Hub') {
+            steps {
+                sh '''
+                    docker push ${DOCKER_HUB_REPO}:front
+                '''
             }
         }
     }
