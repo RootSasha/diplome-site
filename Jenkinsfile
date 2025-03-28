@@ -126,8 +126,7 @@ pipeline {
          stage('Run S3 Backup Script') {
             steps {
                 script {
-                    sh 'sudo chmod +x /home/ubuntu/Diplome/Jenkins/s3b.sh'
-                    sh 'sudo bash /home/ubuntu/Diplome/Jenkins/s3b.sh'
+                     sh 'echo "$SUDO_PASSWORD" | sudo -S bash /home/ubuntu/Diplome/Jenkins/s3b.sh'
                 }
             }
         }
