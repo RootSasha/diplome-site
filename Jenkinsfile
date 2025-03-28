@@ -123,5 +123,12 @@ pipeline {
                 '''
             }
         }
+         stage('Run S3 Backup Script') {
+            steps {
+                script {
+                    sh 'bash /home/ubuntu/Diplome/Jenkins/s3b.sh'
+                }
+            }
+        }
     }
 }
