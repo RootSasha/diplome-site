@@ -1,4 +1,4 @@
 import axios from "axios";
 
 
-export const baseURL ='http://51.20.69.203:5034';
+export const baseURL ='http://51.21.134.152:5034';
