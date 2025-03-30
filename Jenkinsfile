@@ -6,6 +6,7 @@ pipeline {
         SQL_CONTAINER_NAME = 'sql111'
         BEK_CONTAINER_NAME = 'bek'
         FRONT_CONTAINER_NAME = 'front'
+        DOCKER_NETWORK_NAME = 'baza'
     }
 
     stages {
@@ -44,6 +45,12 @@ pipeline {
             }
         }
 
+       stage('Create Docker Network') {
+             steps {
+                 sh 'sudo docker network create baza || true'
+             }
+         }
+        
         stage('Run SQL Server') {
             steps {
                 sh "sudo docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=Qwerty-1' -p 1433:1433 --name ${SQL_CONTAINER_NAME} --hostname sql1 --network ${DOCKER_NETWORK_NAME} -d mcr.microsoft.com/mssql/server:2022-latest"
