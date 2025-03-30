@@ -6,7 +6,6 @@ pipeline {
         SQL_CONTAINER_NAME = 'sql111'
         BEK_CONTAINER_NAME = 'bek'
         FRONT_CONTAINER_NAME = 'front'
-        DOCKER_NETWORK_NAME = 'baza'
     }
 
     stages {
@@ -42,12 +41,6 @@ pipeline {
                         fi
                     '''
                 }
-            }
-        }
-
-        stage('Create Docker Network') {
-            steps {
-                sh 'sudo docker network create baza || true'
             }
         }
 
